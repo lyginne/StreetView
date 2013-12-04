@@ -1,0 +1,6 @@
+
+*.cache
+*.db
+StreetView/Data/
+StreetView/bin/
+StreetView/obj/
