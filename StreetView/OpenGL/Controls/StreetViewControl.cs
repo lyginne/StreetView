@@ -107,7 +107,7 @@ namespace StreetView.OpenGL.Controls
 
             if (filein != null)
             {
-                StreetElements.Rectangle rectangle;
+                StreetElements.Prism prism;
                 //line.IndexOf("NUMPOLLIES");
                 string line = filein.ReadLine();
                 string[] polystring = line.Split(' ');
@@ -124,8 +124,8 @@ namespace StreetView.OpenGL.Controls
                     }
                     Texture texture = _listTextures.FirstOrDefault(x => x.TextureName == Texture.ParseTextureName(line));
                     _sector1.Triangles.Add(new Triangle(triangleVertexes, texture));
-                    rectangle = new StreetElements.Rectangle(0, 0, 0, 0, 20f, 20f, texture);
-                    _sector1.Triangles.AddRange(rectangle.Triangles);
+                    prism = new StreetElements.Prism(0, 0, 0, 20f, 20f, 20f, texture);
+                    _sector1.Triangles.AddRange(prism.Triangles);
                     line = "";
                 }
                 filein.Close();

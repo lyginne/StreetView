@@ -13,11 +13,25 @@ namespace StreetView.OpenGL.StreetElements
 
         public Rectangle(float x, float y, float z, float xSize, float ySize, float zSize, Texture texture)
         {
-            
-            var firstTriangle = new Triangle(new Vertex(x,y,z,0,0),new Vertex(x+xSize,y+ySize,z,0,0),new Vertex(x+xSize,y+ySize,z+zSize,0,0), texture);
-            var secondTriangle = new Triangle(new Vertex(x, y, z, 0, 0), new Vertex(x + xSize, y + ySize, z, 0, 0), new Vertex(x + xSize, y + ySize, z + zSize, 0, 0), texture);
-            Triangles.Add(firstTriangle);
-            Triangles.Add(secondTriangle);
+            Triangle firstTriangle = null;
+            Triangle secondTriangle = null;
+            if (Math.Abs(xSize) < 1e-15)
+            {
+                firstTriangle = new Triangle(new Vertex(x, y, z, 0, 0), new Vertex(x, y, z+zSize, 0, 0), new Vertex(x, y + ySize, z + zSize, 0, 0), texture);
+                secondTriangle = new Triangle(new Vertex(x, y, z, 0, 0), new Vertex(x, y + ySize, z, 0, 0), new Vertex(x, y + ySize, z + zSize, 0, 0), texture);
+            }
+           else if (Math.Abs(ySize) < 1e-15)
+            {
+                firstTriangle = new Triangle(new Vertex(x, y, z, 0, 0), new Vertex(x, y, z + zSize, 0, 0), new Vertex(x+xSize, y, z + zSize, 0, 0), texture);
+                secondTriangle = new Triangle(new Vertex(x, y, z, 0, 0), new Vertex(x+xSize, y, z, 0, 0), new Vertex(x+xSize, y, z + zSize, 0, 0), texture);
+            }
+            else if (Math.Abs(zSize) < 1e-15)
+            {
+                firstTriangle = new Triangle(new Vertex(x, y, z, 0, 0), new Vertex(x+xSize, y, z, 0, 0), new Vertex(x+xSize, y + ySize, z, 0, 0), texture);
+                secondTriangle = new Triangle(new Vertex(x, y, z, 0, 0), new Vertex(x, y + ySize, z, 0, 0), new Vertex(x+xSize, y + ySize, z, 0, 0), texture);
+            }
+            if (firstTriangle != null) Triangles.Add(firstTriangle);
+            if (secondTriangle != null) Triangles.Add(secondTriangle);
         }
     }
 }
