@@ -6,10 +6,46 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.IO;
 using StreetView.OpenGL.Elements;
+using StreetView.OpenGL.StreetElements;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace StreetView.OpenGL.Controls
 {   public class StreetViewControl : OpenGLControl
     {
+
+    public void drawBackground()
+    {
+        GL.glMatrixMode(GL.GL_PROJECTION);
+        GL.glPushMatrix();
+        GL.glOrtho(0, 1, 0, 1, 0, 1);
+
+        GL.glMatrixMode(GL.GL_MODELVIEW);
+        GL.glPushMatrix();
+        GL.glLoadIdentity();
+
+        // No depth buffer writes for background.
+        GL.glDepthMask(0);
+
+        GL.glBindTexture(GL.GL_TEXTURE_2D, Textures.SkyTexture.TextureBytes[0]);
+        GL.glBegin(GL.GL_QUADS);
+        {
+            GL.glTexCoord2f(0f, 0f);
+            GL.glVertex2f(0, 0);
+            GL.glTexCoord2f(0f, 1f);
+            GL.glVertex2f(0, 1f);
+            GL.glTexCoord2f(1f, 1f);
+            GL.glVertex2f(1f, 1f);
+            GL.glTexCoord2f(1f, 0f);
+            GL.glVertex2f(1f, 0);
+        } GL.glEnd();
+
+        GL.glDepthMask(1);
+
+        GL.glPopMatrix();
+        GL.glMatrixMode(GL.GL_PROJECTION);
+        GL.glPopMatrix();
+        GL.glMatrixMode(GL.GL_MODELVIEW);
+    }
         private float _heading;
         private float _xpos;
         private float _zpos;
@@ -21,9 +57,10 @@ namespace StreetView.OpenGL.Controls
 
         protected override void InitGLContext()
         {
-            LoadTextures();
+            GL.glEnable(GL.GL_TEXTURE_2D);
+            
 
-            GL.glEnable(GL.GL_TEXTURE_2D);									// Enable Texture Mapping
+            									// Enable Texture Mapping
             GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);						// Set The Blending Function For Translucency
             GL.glShadeModel(GL.GL_SMOOTH);									// Enable Smooth Shading
             GL.glClearColor(0.1f, 0.4f, 3.9f, 0f);						    // Black Background
@@ -32,6 +69,7 @@ namespace StreetView.OpenGL.Controls
             GL.glDepthFunc(GL.GL_LESS);										// The Type Of Depth Testing To Do
             GL.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);		// Really Nice Perspective Calculations
 
+            LoadTextures();
             SetupWorld();
         }
 
@@ -83,6 +121,12 @@ namespace StreetView.OpenGL.Controls
             LoadTexture(@"Data\road.bmp", "road");
             LoadTexture(@"Data\wood.bmp", "wood");
             LoadTexture(@"Data\tree.bmp", "tree");
+            _listTextures.Add(Textures.BrickTexture);
+            _listTextures.Add(Textures.WindowTexture);
+            _listTextures.Add(Textures.SnowTexture);
+            drawBackground();
+           // _listTextures.Add(Textures.SkyTexture);
+            
         }
 
         public void SetupWorld()
@@ -105,33 +149,35 @@ namespace StreetView.OpenGL.Controls
                 MessageBox.Show("Could not load " + path + ".  Please make sure that Data is a subfolder from where the application is running.", "Error", MessageBoxButtons.OK);
             }
 
-            if (filein != null)
-            {
-                StreetElements.Prism prism;
-                //line.IndexOf("NUMPOLLIES");
-                string line = filein.ReadLine();
-                string[] polystring = line.Split(' ');
-                int count = int.Parse(polystring[1]);
-                for (int i = 0; i < count; i++)
-                {
-                    var triangleVertexes = new Vertex[3];
-                    for (int j = 0; j < 3; j++)
-                    {
-                        line = "";
-                        while (line.Trim().Length == 0)
-                            line = filein.ReadLine();
-                        triangleVertexes[j] = Vertex.Parse(line);
-                    }
-                    Texture texture = _listTextures.FirstOrDefault(x => x.TextureName == Texture.ParseTextureName(line));
-                    _sector1.Triangles.Add(new Triangle(triangleVertexes, texture));
-                    prism = new StreetElements.Prism(0, 0, 0, 20f, 20f, 20f, texture);
-                    _sector1.Triangles.AddRange(prism.Triangles);
-                    line = "";
-                }
-                filein.Close();
-                
-                
-            }
+//            if (filein != null)
+//            {
+//                //StreetElements.Prism prism;
+//                //line.IndexOf("NUMPOLLIES");
+//                string line = filein.ReadLine();
+//                string[] polystring = line.Split(' ');
+//                int count = int.Parse(polystring[1]);
+//                for (int i = 0; i < count; i++)
+//                {
+//                    var triangleVertexes = new Vertex[3];
+//                    for (int j = 0; j < 3; j++)
+//                    {
+//                        line = "";
+//                        while (line.Trim().Length == 0)
+//                            line = filein.ReadLine();
+//                        triangleVertexes[j] = Vertex.Parse(line);
+//                    }
+//                    Texture texture = _listTextures.FirstOrDefault(x => x.TextureName == Texture.ParseTextureName(line));
+//                    _sector1.Triangles.Add(new Triangle(triangleVertexes, texture));
+//                    
+//                    line = "";
+//                }
+//                filein.Close();
+
+                //prism = new StreetElements.Prism(0, 0, 0, 20f, 20f, 20f, _listTextures.First());
+                var building = new Building(0, 0);
+            var ground = new Ground();
+            _sector1.Triangles.AddRange(ground.GetPolygons());
+            _sector1.Triangles.AddRange(building.GetPolygons());
         }
 
         public override void glDraw()
