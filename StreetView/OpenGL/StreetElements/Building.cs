@@ -14,15 +14,15 @@ namespace StreetView.OpenGL.StreetElements
             OpenGLObjects.Add(prism);
             prism = new Prism(x-5f, 0, z + 20f, 10f, 14 * 2.5f, 15f, Textures.BrickTexture);
             OpenGLObjects.Add(prism);
-            createWindows(x,z);
+            CreateWindows(x,z);
         }
 
-        private void createWindows(float x, float z)
+        private void CreateWindows(float x, float z)
         {
             for (int stage = 0;stage<15;stage++)
             {
                 //15 этажей
-                Rectangle window = new Rectangle(x+4.6f, 0.5f + stage*2.5f, z-0.01f, 0.8f, 1, 0, Textures.WindowTexture);
+                var window = new Rectangle(x+4.6f, 0.5f + stage*2.5f, z-0.01f, 0.8f, 1, 0, Textures.WindowTexture);
                 OpenGLObjects.Add(window);
 
                 //боковые на фронт

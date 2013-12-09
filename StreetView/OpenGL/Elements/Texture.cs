@@ -1,4 +1,10 @@
-﻿namespace StreetView.OpenGL.Elements
+﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Windows.Forms;
+using CsGL.OpenGL;
+
+namespace StreetView.OpenGL.Elements
 {
     public class Texture
     {
@@ -8,6 +14,37 @@
         public Texture(string textureName){
             TextureBytes = new uint[1];
             TextureName = textureName;
+            Bitmap image = null;
+            try
+            {
+                image = new Bitmap(@"Data/" + textureName + ".bmp");
+            }
+            catch (ArgumentException)
+            {
+                MessageBox.Show("Could not load texture" + textureName + ".  Please make sure that Data is a subfolder from where the application is running.", "Error", MessageBoxButtons.OK);
+            }
+
+            if (image != null)
+            {
+                image.RotateFlip(RotateFlipType.Rotate90FlipY);
+                var rect = new Rectangle(0, 0, image.Width, image.Height);
+
+                BitmapData bitmapdata = image.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+                //Texture texture = new Texture(textureName);
+                GL.glGenTextures(1, TextureBytes);
+
+                // Create Nearest Filtered Texture
+                GL.glBindTexture(GL.GL_TEXTURE_2D, TextureBytes[0]);
+                GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
+                GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
+                GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, (int)GL.GL_RGB, image.Width, image.Height, 0, GL.GL_BGR_EXT, GL.GL_UNSIGNED_BYTE, bitmapdata.Scan0);
+
+                image.UnlockBits(bitmapdata);
+                image.Dispose();
+
+
+            }
         }
 
         public static string ParseTextureName(string line) 
