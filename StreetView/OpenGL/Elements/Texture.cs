@@ -21,15 +21,15 @@ namespace StreetView.OpenGL.Elements
             }
             catch (ArgumentException)
             {
-                MessageBox.Show("Could not load texture" + textureName + ".  Please make sure that Data is a subfolder from where the application is running.", "Error", MessageBoxButtons.OK);
+                MessageBox.Show("Could not load texture" + textureName + ".", "Error", MessageBoxButtons.OK);
             }
 
             if (image != null)
             {
                 image.RotateFlip(RotateFlipType.Rotate90FlipY);
-                var rect = new Rectangle(0, 0, image.Width, image.Height);
+                var rect = new System.Drawing.Rectangle(0, 0, image.Width, image.Height);
 
-                BitmapData bitmapdata = image.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                BitmapData bitmapdata = image.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 
                 //Texture texture = new Texture(textureName);
                 GL.glGenTextures(1, TextureBytes);
@@ -45,12 +45,6 @@ namespace StreetView.OpenGL.Elements
 
 
             }
-        }
-
-        public static string ParseTextureName(string line) 
-        {
-            string[] coords = line.Split(' ');
-            return coords[5];
         }
     }
 }

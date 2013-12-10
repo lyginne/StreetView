@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using StreetView.OpenGL.Elements;
 
-namespace StreetView.OpenGL
+namespace StreetView.OpenGL.WorldElements
 {
     public abstract class OpenGLObject
     {
@@ -18,8 +15,20 @@ namespace StreetView.OpenGL
             }
             return triangles;
         }
+        public virtual List<Triangle> GetShadowObjects()
+        {
+            var triangles = new List<Triangle>();
+            triangles.AddRange(Triangles);
+            foreach (var shadowObject in ShadowObjects)
+            {
+                triangles.AddRange(shadowObject.GetPolygons());
+            }
+            return triangles;
+        }
+
 
         protected readonly List<Triangle> Triangles = new List<Triangle>();
+        public readonly List<OpenGLObject> ShadowObjects = new List<OpenGLObject>(); 
         protected readonly List<OpenGLObject> OpenGLObjects = new List<OpenGLObject>(); 
 
     }

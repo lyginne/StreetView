@@ -46,26 +46,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainClass.cs" />
-    <Compile Include="OpenGL\StreetElements\BrezhnevkaBlock.cs" />
-    <Compile Include="OpenGL\StreetElements\Sky.cs" />
-    <Compile Include="OpenGL\StreetElements\Ground.cs" />
-    <Compile Include="OpenGL\StreetElements\Lenkaya2.cs" />
-    <Compile Include="OpenGL\StreetElements\Lenskaya1.cs" />
-    <Compile Include="OpenGL\StreetElements\Lenskaya4.cs" />
-    <Compile Include="OpenGL\StreetElements\Lenskaya6.cs" />
-    <Compile Include="OpenGL\Textures.cs" />
-    <Compile Include="OpenGL\Elements\Sector.cs" />
+    <Compile Include="OpenGL\WorldElements\BrezhnevkaBlock.cs" />
+    <Compile Include="OpenGL\WorldElements\Sky.cs" />
+    <Compile Include="OpenGL\WorldElements\Ground.cs" />
+    <Compile Include="OpenGL\WorldElements\Lenkaya2.cs" />
+    <Compile Include="OpenGL\WorldElements\Lenskaya1.cs" />
+    <Compile Include="OpenGL\WorldElements\Lenskaya4.cs" />
+    <Compile Include="OpenGL\WorldElements\Lenskaya6.cs" />
+    <Compile Include="OpenGL\Elements\Textures.cs" />
+    <Compile Include="OpenGL\WorldElements\World.cs" />
     <Compile Include="OpenGL\Controls\StreetViewControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="OpenGL\Elements\Texture.cs" />
     <Compile Include="OpenGL\Elements\Triangle.cs" />
     <Compile Include="OpenGL\Elements\Vertex.cs" />
-    <Compile Include="OpenGL\OpenGLObject.cs" />
-    <Compile Include="OpenGL\StreetElements\Building.cs" />
-    <Compile Include="OpenGL\StreetElements\Generate.cs" />
-    <Compile Include="OpenGL\StreetElements\Prism.cs" />
-    <Compile Include="OpenGL\StreetElements\Rectangle.cs" />
+    <Compile Include="OpenGL\WorldElements\OpenGLObject.cs" />
+    <Compile Include="OpenGL\WorldElements\Building.cs" />
+    <Compile Include="OpenGL\Elements\Prism.cs" />
+    <Compile Include="OpenGL\Elements\Rectangle.cs" />
     <Compile Include="Windows\MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>

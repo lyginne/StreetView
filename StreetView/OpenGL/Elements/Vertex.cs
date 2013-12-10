@@ -18,11 +18,5 @@
             Z = z;
             U = u;
         }
-
-        public static Vertex Parse(string line)
-        {
-            string[] coords = line.Split(' ');
-            return new Vertex(float.Parse(coords[0]), float.Parse(coords[1]), float.Parse(coords[2]), float.Parse(coords[3]), float.Parse(coords[4]));
-        }
     }
 }

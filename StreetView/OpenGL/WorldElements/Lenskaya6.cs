@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using StreetView.OpenGL.Elements;
 
-namespace StreetView.OpenGL.StreetElements
+namespace StreetView.OpenGL.WorldElements
 {
     internal class Lenskaya6 : OpenGLObject
     {
@@ -11,6 +8,7 @@ namespace StreetView.OpenGL.StreetElements
         {
             var prism = new Prism(x, 0, z, 20, stages*2.5f, 20, Textures.WhiteTexture);
             OpenGLObjects.Add(prism);
+            ShadowObjects.Add(prism);
             CreateWindows(x,z,stages);
         }
 

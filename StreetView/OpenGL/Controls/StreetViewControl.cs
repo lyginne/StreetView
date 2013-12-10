@@ -1,79 +1,125 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using CsGL.OpenGL;
-using System.Drawing;
 using System.Windows.Forms;
-using System.IO;
 using StreetView.OpenGL.Elements;
-using StreetView.OpenGL.StreetElements;
-using Rectangle = System.Drawing.Rectangle;
+using StreetView.OpenGL.WorldElements;
+using Timer = System.Timers.Timer;
 
 namespace StreetView.OpenGL.Controls
 {   
     public class StreetViewControl : OpenGLControl
-    {
-        public void InitShadows()
-        {
-           // _xpos = -500;
-            //_zpos = -500;
-            GL.glPushAttrib(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT |
-                  GL.GL_ENABLE_BIT | GL.GL_POLYGON_BIT | GL.GL_STENCIL_BUFFER_BIT);
-            GL.glDisable(GL.GL_LIGHTING);    // Выключим свет
-            GL.glDepthMask(0);     // Выключим запись в буфер глубины
-            GL.glDepthFunc(GL.GL_LEQUAL);
-            GL.glEnable(GL.GL_STENCIL_TEST); // Включим тест буфера трафарета
-            GL.glColorMask(0, 0, 0, 0); // Не рисовать в буфер цвета
-            GL.glStencilFunc(GL.GL_ALWAYS, 1, 0xFFFFFFFF);
+    {									// Object
+        public delegate void RefreshDelegate();
 
-             GL.glFrontFace( GL.GL_CCW );
-      // Включить визуализацию цветового буфера для всех компонент
-             GL.glFrontFace(GL.GL_CW);
-             GL.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_DECR);
-            GL.glColorMask( 1, 1,1, 1 );
- 
-            // Нарисовать теневой прямоугольник на весь экран
-            GL.glColor4f( 0.0f, 0.0f, 0.0f, 0.4f );
-            GL.glEnable( GL.GL_BLEND );
-            GL.glBlendFunc( GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA );
-            GL.glStencilFunc( GL.GL_NOTEQUAL, 0, 0xFFFFFFFF );
-            GL.glStencilOp( GL.GL_KEEP, GL.GL_KEEP, GL.GL_KEEP );
-            GL.glPushMatrix();
-            GL.glLoadIdentity();
-            GL.glBegin( GL.GL_TRIANGLE_STRIP );
-            GL.glVertex3f(-0.1f, 0.1f,-0.10f);
-            GL.glVertex3f(-0.1f,-0.1f,-0.10f);
-            GL.glVertex3f( 0.1f, 0.1f,-0.10f);
-            GL.glVertex3f( 0.1f,-0.1f,-0.10f);
-            GL.glEnd();
-            GL.glPopMatrix();
-            GL.glPopAttrib();
+        readonly float[] _lightPos = { 100f, 100f,-100f, 100f};			
+        readonly float[] _lightAmb = { 100f, 100f, 100f, 100f};	
+        readonly float[] _lightDif = { 0.6f, 0.6f, 0.6f, 1.0f};	
+        readonly float[] _lightSpc = {-0.2f, -0.2f, -0.2f, 1.0f};
+
+        readonly float[] _matAmb = {0.4f, 0.4f, 0.4f, 1.0f};
+        readonly float[] _matDif = { 0.2f, 0.6f, 0.9f, 1.0f };
+        readonly float[] _matSpc = { 0.0f, 0.0f, 0.0f, 1.0f };
+        readonly float[] _matShn = { 0.0f };
+
+        private float _yposition = 2;
+
+        float _heading;
+        private float _xpos;
+        private float _zpos;
+
+        private float _lookupdown;
+
+        private readonly World _sector1 = new World();
+        private GLUquadric _quadric;
+
+        bool _ups = true;
+
+        public StreetViewControl()
+        {
+            var timer = new Timer(50);
+            timer.Elapsed += timer_Elapsed;
+            timer.AutoReset = true;
+            timer.Enabled = true;
+        }
+
+        void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (_ups)
+                _yposition++;
+            else
+                _yposition--;
+            if (_yposition < 2)
+            {
+                _yposition = 2;
+                _ups = true;
+            }
+            if (_yposition > 20)
+            {
+                _ups = false;
+            }
+            if (!Disposing)
+                BeginInvoke(new RefreshDelegate(Refresh));
         }
 
         public void InitGl()
         {
-            GL.glEnable(GL.GL_TEXTURE_2D);                                  // Enable Texture Mapping
-            GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);						// Set The Blending Function For Translucency
-            GL.glShadeModel(GL.GL_SMOOTH);									// Enable Smooth Shading
-            GL.glClearColor(0.1f, 0.4f, 3.9f, 0f);						    // Black Background
-            GL.glClearDepth(1.0f);											// Depth Buffer Setup
-            GL.glEnable(GL.GL_DEPTH_TEST);									// Enables Depth Testing
-            GL.glDepthFunc(GL.GL_LESS);										// The Type Of Depth Testing To Do
-            GL.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);		// Really Nice Perspective Calculations
-        }
+            GL.glEnable(GL.GL_TEXTURE_2D); 
 
-        public void DropShadow(Vertex vertex)
-        {
-            foreach (var triangle in _sector1.Triangles)
+            GL.glShadeModel(GL.GL_SMOOTH);							
+            GL.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				
+            GL.glClearDepth(1.0f);									
+            GL.glClearStencil(0);									
+            GL.glEnable(GL.GL_DEPTH_TEST);							
+            GL.glDepthFunc(GL.GL_LEQUAL);								
+            GL.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);	
+
+            GL.glLightfv(GL.GL_LIGHT1, GL.GL_POSITION, _lightPos);		
+            GL.glLightfv(GL.GL_LIGHT1, GL.GL_AMBIENT, _lightAmb);			
+            GL.glLightfv(GL.GL_LIGHT1, GL.GL_DIFFUSE, _lightDif);			
+            GL.glLightfv(GL.GL_LIGHT1, GL.GL_SPECULAR, _lightSpc);		
+            GL.glEnable(GL.GL_LIGHT1);								
+            GL.glEnable(GL.GL_LIGHTING);								
+
+            GL.glMaterialfv(GL.GL_FRONT, GL.GL_AMBIENT, _matAmb);			
+            GL.glMaterialfv(GL.GL_FRONT, GL.GL_DIFFUSE, _matDif);			
+            GL.glMaterialfv(GL.GL_FRONT, GL.GL_SPECULAR, _matSpc);		
+            GL.glMaterialfv(GL.GL_FRONT, GL.GL_SHININESS, _matShn);		
+
+            GL.glCullFace(GL.GL_BACK);								
+            GL.glClearColor(0.1f, 1.0f, 0.5f, 1.0f);
+
+            _quadric = GL.gluNewQuadric();
+            GL.gluQuadricNormals(_quadric, GL.GL_SMOOTH);
+            GL.gluQuadricTexture(_quadric, (byte) GL.GL_TRUE);	
+
+        }
+	    void  CastShadow(Vertex vertex){
+	        GL.glDisable(GL.GL_LIGHTING);
+	        GL.glDepthMask((byte) GL.GL_FALSE);
+	        GL.glDepthFunc(GL.GL_LEQUAL);
+
+	        GL.glEnable(GL.GL_STENCIL_TEST);
+	        GL.glColorMask(0, 0, 0, 0);
+	        GL.glStencilFunc(GL.GL_ALWAYS, 1, 0xffffffff);
+
+	        GL.glColorMask(1, 1, 1, 1);
+
+	        GL.glColor4f(0.0f, 0.0f, 0.0f, 0.03f);
+	        GL.glEnable(GL.GL_BLEND);
+	        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+	        GL.glStencilFunc(GL.GL_NOTEQUAL, 0, 0xffffffff);
+            GL.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_INCR);
+	        GL.glPushMatrix();
+            foreach (var triangle in _sector1.ShadowObjects)
             {
                 for (int j = 0; j < 3; j++)
                 {
                     var vertex1 = triangle.Vertex[j];
-                    var vertex2 = triangle.Vertex[(j+1)%3];
+                    var vertex2 = triangle.Vertex[(j + 1) % 3];
 
                     var vertex3 = new Vertex((vertex1.X - vertex.X) * 1000,
-                        (vertex1.Y - vertex.Y) * 1000, (vertex1.Z - vertex.Z) * 1000,0,0);
-                    var vertex4 = vertex3 = new Vertex((vertex2.X - vertex.X) * 1000,
+                        (vertex1.Y - vertex.Y) * 1000, (vertex1.Z - vertex.Z) * 1000, 0, 0);
+                    var vertex4 = new Vertex((vertex2.X - vertex.X) * 1000,
                         (vertex2.Y - vertex.Y) * 1000, (vertex2.Z - vertex.Z) * 1000, 0, 0);
                     GL.glBegin(GL.GL_TRIANGLE_STRIP);
                     GL.glVertex3f(vertex1.X, vertex1.Y, vertex1.Z);
@@ -84,85 +130,51 @@ namespace StreetView.OpenGL.Controls
                 }
 
             }
-            
+	        GL.glPopMatrix();
+            GL.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_DECR);
+            GL.glPushMatrix();
+            foreach (var triangle in _sector1.ShadowObjects)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    var vertex1 = triangle.Vertex[j];
+                    var vertex2 = triangle.Vertex[(j + 1) % 3];
+
+                    var vertex3 = new Vertex((vertex1.X - vertex.X) * 1000,
+                        (vertex1.Y - vertex.Y) * 1000, (vertex1.Z - vertex.Z) * 1000, 0, 0);
+                    var vertex4 = new Vertex((vertex2.X - vertex.X) * 1000,
+                        (vertex2.Y - vertex.Y) * 1000, (vertex2.Z - vertex.Z) * 1000, 0, 0);
+                    GL.glBegin(GL.GL_TRIANGLE_STRIP);
+                    GL.glVertex3f(vertex1.X, vertex1.Y, vertex1.Z);
+                    GL.glVertex3f(vertex1.X + vertex3.X, vertex1.Y + vertex3.Y, vertex1.Z + vertex3.Z);
+                    GL.glVertex3f(vertex2.X, vertex2.Y, vertex2.Z);
+                    GL.glVertex3f(vertex2.X + vertex4.X, vertex2.Y + vertex4.Y, vertex2.Z + vertex4.Z);
+                    GL.glEnd();
+                }
+
+            }
+            GL.glPopMatrix();
+	        GL.glDisable(GL.GL_BLEND);
+
+	        GL.glDepthFunc(GL.GL_LEQUAL);
+	        GL.glDepthMask((byte) GL.GL_TRUE);
+	        GL.glEnable(GL.GL_LIGHTING);
+	        GL.glDisable(GL.GL_STENCIL_TEST);
+	        GL.glShadeModel(GL.GL_SMOOTH);
         }
-//        public void DrawBackground()
-//        {
-//            GL.glMatrixMode(GL.GL_PROJECTION);
-//            GL.glPushMatrix();
-//            GL.glOrtho(0, 1, 0, 1, 0, 1);
-//
-//            GL.glMatrixMode(GL.GL_MODELVIEW);
-//            GL.glPushMatrix();
-//            GL.glLoadIdentity();
-//
-//            // No depth buffer writes for background.
-//            GL.glDepthMask(0);
-//
-//            GL.glBindTexture(GL.GL_TEXTURE_2D, Textures.SkyTexture.TextureBytes[0]);
-//            GL.glBegin(GL.GL_QUADS);
-//            {
-//                GL.glTexCoord2f(0f, 0f);
-//                GL.glVertex2f(0, 0);
-//                GL.glTexCoord2f(0f, 1f);
-//                GL.glVertex2f(0, 1f);
-//                GL.glTexCoord2f(1f, 1f);
-//                GL.glVertex2f(1f, 1f);
-//                GL.glTexCoord2f(1f, 0f);
-//                GL.glVertex2f(1f, 0);
-//            } GL.glEnd();
-//
-//            GL.glDepthMask(1);
-//
-//            GL.glPopMatrix();
-//            GL.glMatrixMode(GL.GL_PROJECTION);
-//            GL.glPopMatrix();
-//            GL.glMatrixMode(GL.GL_MODELVIEW);
-//        }
-        private float _heading;
-        private float _xpos;
-        private float _zpos;
 
-        private float _lookupdown;        // Camera up and down
-
-        private readonly List<Texture> _listTextures = new List<Texture>();
-        private readonly Sector _sector1 = new Sector();	// Our Model Goes Here:
 
         protected override void InitGLContext()
         {
-            GL.glEnable(GL.GL_TEXTURE_2D);                                  // Enable Texture Mapping
-            GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);						// Set The Blending Function For Translucency
-            GL.glShadeModel(GL.GL_SMOOTH);									// Enable Smooth Shading
-            GL.glClearColor(0.1f, 0.4f, 3.9f, 0f);						    // Black Background
-            GL.glClearDepth(1.0f);											// Depth Buffer Setup
-            GL.glEnable(GL.GL_DEPTH_TEST);									// Enables Depth Testing
-            GL.glDepthFunc(GL.GL_LESS);										// The Type Of Depth Testing To Do
-            GL.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);		// Really Nice Perspective Calculations
-
-            LoadTextures();
+            InitGl();
             SetupWorld();
-        }
-
-        protected void LoadTextures()
-        {
-            _listTextures.Add(Textures.BrickTexture);
-            _listTextures.Add(Textures.WindowTexture);
-            _listTextures.Add(Textures.SnowTexture);
-            _listTextures.Add(Textures.YellowWall);
-            _listTextures.Add(Textures.AsphalTexture);
-            _listTextures.Add(Textures.GreeTexture);
-            _listTextures.Add(Textures.BeigeTexture);
-            _listTextures.Add(Textures.WhiteTexture);
-            _listTextures.Add(Textures.SkyTexture);
-            //DrawBackground();
         }
 
         public void SetupWorld()
         {
-            //var building = new Building(0, 0);
+            var building = new Building(0, 0);
             var lenskya3 = new Building(-50, 50);
             var ground = new Ground();
-            //var brezhnevka = new BrezhnevkaBlock(0, -50, false, 9);
             var lenskaya1 = new Lenskaya1(0, -50);
             var lenskaya2 = new Lenkaya2(-60,-50);
             var lenskaya4 = new Lenskaya4(-15, -50);
@@ -175,46 +187,60 @@ namespace StreetView.OpenGL.Controls
             _sector1.Triangles.AddRange(lenskaya1.GetPolygons());
             _sector1.Triangles.AddRange(lenskya3.GetPolygons());
             _sector1.Triangles.AddRange(ground.GetPolygons());
-           // _sector1.Triangles.AddRange(building.GetPolygons());
+            _sector1.Triangles.AddRange(building.GetPolygons());
+
+            _sector1.ShadowObjects.AddRange(lenskaya6.GetShadowObjects());
+            _sector1.ShadowObjects.AddRange(lenskaya4.GetShadowObjects());
+            _sector1.ShadowObjects.AddRange(lenskaya2.GetShadowObjects());
+            _sector1.ShadowObjects.AddRange(lenskaya1.GetShadowObjects());
+            _sector1.ShadowObjects.AddRange(lenskya3.GetShadowObjects());
+            _sector1.ShadowObjects.AddRange(building.GetShadowObjects());
         }
 
         public override void glDraw()
         {
+            
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
             GL.glLoadIdentity();
 
             GL.glRotatef(_lookupdown, 1.0f, 0.0f, 0.0f);
             GL.glRotatef(360.0f - _heading, 0.0f, 1.0f, 0.0f);
 
-            GL.glTranslatef(-_xpos -25,  - 1.25f, -_zpos +20);//камера
+            GL.glTranslatef(-_xpos -25,  - 1.25f, -_zpos +20);
 
-            InitGl();
-            foreach (Texture currentTexture in _listTextures)
-                    DrawTrianglesWithTexture(currentTexture);
-            InitShadows();
-            DropShadow(new Vertex(499,499,499,0,0));
+            DrawGLObject();
+            GL.glBindTexture(GL.GL_TEXTURE_2D, Textures.BrickTexture.TextureBytes[0]);// Reset Modelview Matrix
+            GL.glPushMatrix();
+            GL.glTranslatef(25, _yposition, -40);
+            GL.gluSphere(_quadric, 2, 32, 16);
+            GL.glPopMatrix();
+            CastShadow(new Vertex(499,499,499,0,0));
+
+           
         }
 
-        public void DrawTrianglesWithTexture(Texture currentTexture)
+        private void DrawGLObject()
         {
-            GL.glBindTexture(GL.GL_TEXTURE_2D, currentTexture.TextureBytes[0]);
-            var triangles = _sector1.Triangles.Where(x => x.Texture.TextureName.Equals(currentTexture.TextureName));
-            foreach (var triangle in triangles)
-            {
-                    GL.glBegin(GL.GL_TRIANGLES);
-
-                    GL.glNormal3f(0.0f, 0.0f, 1.0f);
-
-                    foreach (var vertex in triangle.Vertex)
-                    {
-                        GL.glTexCoord2f(vertex.U, vertex.V);
-                        GL.glVertex3f(vertex.X, vertex.Y, vertex.Z);
-                    }
-
-                    GL.glEnd();
-            }
+            foreach (Triangle triangle in _sector1.Triangles)
+                    DrawTriangle(triangle);
         }
 
+        public void DrawTriangle(Triangle triangle)
+        {
+            GL.glBindTexture(GL.GL_TEXTURE_2D, triangle.Texture.TextureBytes[0]);
+            GL.glBegin(GL.GL_TRIANGLES);
+
+            GL.glNormal3f(0.0f, 0.0f, 1.0f);
+
+            foreach (var vertex in triangle.Vertex)
+            {
+                GL.glTexCoord2f(vertex.U, vertex.V);
+                GL.glVertex3f(vertex.X, vertex.Y, vertex.Z);
+            }
+
+            GL.glEnd();
+        }
+        #region events
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
@@ -253,10 +279,11 @@ namespace StreetView.OpenGL.Controls
                 _lookupdown += 6.0f;
 
             base.ProcessDialogKey(keyData);
-            glDraw();            
-            Parent.Refresh();
+            glDraw();  
+            Refresh();
 
-            return true;           
+            return true;
         }
+        #endregion events
     }
 }

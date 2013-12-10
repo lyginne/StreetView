@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using CsGL.OpenGL;
-using StreetView.OpenGL.Elements;
-
-namespace StreetView.OpenGL
+﻿namespace StreetView.OpenGL.Elements
 {
     public  static class Textures
     {

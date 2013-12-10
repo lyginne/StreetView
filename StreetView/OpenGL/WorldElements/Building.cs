@@ -1,19 +1,22 @@
-﻿using System.Collections.Generic;
-using StreetView.OpenGL.Elements;
+﻿using StreetView.OpenGL.Elements;
 
-namespace StreetView.OpenGL.StreetElements
+namespace StreetView.OpenGL.WorldElements
 {
     public class Building : OpenGLObject
     {
         public Building(float x, float z) {
             var prism = new Prism(x,0,z,10f,15*2.5f, 20f,Textures.BrickTexture);
             OpenGLObjects.Add(prism);
+            ShadowObjects.Add(prism);
             prism = new Prism(x+7.5f,0,z+15f,12.5f,13*2.5f,10f,Textures.BrickTexture);
             OpenGLObjects.Add(prism);
+            ShadowObjects.Add(prism);
             prism = new Prism(x, 0, z + 10f, -15f, 14 * 2.5f, 10f, Textures.BrickTexture);
             OpenGLObjects.Add(prism);
+            ShadowObjects.Add(prism);
             prism = new Prism(x-5f, 0, z + 20f, 10f, 14 * 2.5f, 15f, Textures.BrickTexture);
             OpenGLObjects.Add(prism);
+            ShadowObjects.Add(prism);
             CreateWindows(x,z);
         }
 

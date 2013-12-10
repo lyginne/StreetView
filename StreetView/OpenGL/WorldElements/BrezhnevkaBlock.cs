@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using StreetView.OpenGL.Elements;
+﻿using StreetView.OpenGL.Elements;
 
-namespace StreetView.OpenGL.StreetElements
+namespace StreetView.OpenGL.WorldElements
 {
     class BrezhnevkaBlock : OpenGLObject
     {
@@ -12,6 +8,7 @@ namespace StreetView.OpenGL.StreetElements
         {
             var prism = new Prism(x, 0, z, alongX ? 30 : 10, stages * 2.5f, alongX ? 10 : 30,texture);
             OpenGLObjects.Add(prism);
+            ShadowObjects.Add(prism);
             CreateWindows(x,z,stages,alongX);
             
         }
