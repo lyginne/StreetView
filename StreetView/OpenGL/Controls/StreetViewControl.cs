@@ -57,8 +57,13 @@ namespace StreetView.OpenGL.Controls
             {
                 _ups = false;
             }
-            if (!Disposing)
+            try
+            {
                 BeginInvoke(new RefreshDelegate(Refresh));
+            }
+            catch (InvalidOperationException)
+            {}
+
         }
 
         public void InitGl()
