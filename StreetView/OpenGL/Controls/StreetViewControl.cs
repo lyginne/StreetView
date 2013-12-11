@@ -136,29 +136,6 @@ namespace StreetView.OpenGL.Controls
 
             }
 	        GL.glPopMatrix();
-            GL.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_DECR);
-            GL.glPushMatrix();
-            foreach (var triangle in _sector1.ShadowObjects)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    var vertex1 = triangle.Vertex[j];
-                    var vertex2 = triangle.Vertex[(j + 1) % 3];
-
-                    var vertex3 = new Vertex((vertex1.X - vertex.X) * 1000,
-                        (vertex1.Y - vertex.Y) * 1000, (vertex1.Z - vertex.Z) * 1000, 0, 0);
-                    var vertex4 = new Vertex((vertex2.X - vertex.X) * 1000,
-                        (vertex2.Y - vertex.Y) * 1000, (vertex2.Z - vertex.Z) * 1000, 0, 0);
-                    GL.glBegin(GL.GL_TRIANGLE_STRIP);
-                    GL.glVertex3f(vertex1.X, vertex1.Y, vertex1.Z);
-                    GL.glVertex3f(vertex1.X + vertex3.X, vertex1.Y + vertex3.Y, vertex1.Z + vertex3.Z);
-                    GL.glVertex3f(vertex2.X, vertex2.Y, vertex2.Z);
-                    GL.glVertex3f(vertex2.X + vertex4.X, vertex2.Y + vertex4.Y, vertex2.Z + vertex4.Z);
-                    GL.glEnd();
-                }
-
-            }
-            GL.glPopMatrix();
 	        GL.glDisable(GL.GL_BLEND);
 
 	        GL.glDepthFunc(GL.GL_LEQUAL);
