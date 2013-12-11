@@ -104,8 +104,6 @@ namespace StreetView.OpenGL.Controls
 	        GL.glDepthFunc(GL.GL_LEQUAL);
 
 	        GL.glEnable(GL.GL_STENCIL_TEST);
-	        GL.glColorMask(0, 0, 0, 0);
-	        GL.glStencilFunc(GL.GL_ALWAYS, 1, 0xffffffff);
 
 	        GL.glColorMask(1, 1, 1, 1);
 
